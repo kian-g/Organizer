@@ -1,0 +1,74 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const { EmbedBuilder } = require('discord.js');
+const UserSetting = require('../models/UserSetting');
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('save')
+        .setDescription('Saves a message to a designated channel.')
+        .addChannelOption(option =>
+            option.setName('channel_to_save_to')
+                .setDescription('The channel to save the message to')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('message_identifier')
+                .setDescription('The ID or link of the message to save')
+                .setRequired(true)),
+
+    async execute(interaction) {
+        const targetChannel = interaction.options.getChannel('channel_to_save_to');
+        let messageToSave;
+        const messageIdentifier = interaction.options.getString('message_identifier');
+
+        try {
+            // Check if messageIdentifier is a message link
+            const messageLinkPattern = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/;
+            const linkMatch = messageLinkPattern.exec(messageIdentifier);
+            if (linkMatch) {
+                // If it's a link, extract the IDs from the URL
+                const [, guildId, channelId, messageId] = linkMatch;
+                if (guildId !== interaction.guild.id) {
+                    await interaction.reply({ content: 'The message link is from another server and cannot be accessed.', ephemeral: true });
+                    return;
+                }
+                messageToSave = await interaction.client.channels.cache.get(channelId)?.messages.fetch(messageId);
+            } else {
+                // If not a link, assume it is a message ID
+                messageToSave = await interaction.channel.messages.fetch(messageIdentifier);
+            }
+
+            // Ensure messageToSave is defined
+            if (!messageToSave) {
+                await interaction.reply({ content: 'Unable to find the message. Please check the ID or link provided.', ephemeral: true });
+                return;
+            }
+
+            const messageUrl = `https://discord.com/channels/${interaction.guild.id}/${messageToSave.channel.id}/${messageToSave.id}`;
+            const userSettings = await UserSetting.findOne({ userId: interaction.user.id });
+            const embedColor = userSettings ? userSettings.embedColor : "Green";
+
+            const embed = new EmbedBuilder()
+                .setTitle('Saved Message')
+                .setURL(messageUrl)
+                .setAuthor({ name: messageToSave.author.username, iconURL: messageToSave.author.displayAvatarURL() })
+                .setTimestamp(new Date(messageToSave.createdTimestamp))
+                .setColor(embedColor)
+                .setFooter({ text: 'Message saved by ' + interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
+
+            if (messageToSave.content) {
+                embed.setDescription(messageToSave.content);
+            }
+
+            const imageAttachments = messageToSave.attachments.filter(att => att.contentType && att.contentType.startsWith('image/'));
+            if (imageAttachments.size > 0) {
+                embed.setImage(imageAttachments.first().url);
+            }
+
+            await targetChannel.send({ embeds: [embed] });
+            await interaction.reply({ content: 'Message saved!', ephemeral: true });
+        } catch (error) {
+            console.error('Error saving message:', error);
+            await interaction.reply({ content: 'There was an error trying to save the message.', ephemeral: true });
+        }
+    },
+};
