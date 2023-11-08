@@ -1,1 +1,1 @@
-# Organizer
+# Organizer Discord Bot
