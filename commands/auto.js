@@ -1,31 +1,39 @@
-// commands/auto.js
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, MessageAttachment } = require("discord.js")
-
+// auto.js
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 const UserSetting = require('../models/UserSetting');
 
-async function handleAutoSave(message, setting, client) {
-    if (setting.autoSaveActive && setting.targetUserId === message.author.id) {
+const messageMap = new Map();
+
+// Function to handle the creation and sending of the auto-save embed message
+async function handleAutoSave(message, client) {
+    if (message.author.bot || (!message.content && message.attachments.size === 0)) return;
+
+    const settings = await AutoSaveSetting.find({
+        guildId: message.guildId,
+        targetUserId: message.author.id,
+        autoSaveActive: true
+    });
+
+    for (const setting of settings) {  // Change forEach to a for...of loop
         const autosaveChannel = client.channels.cache.get(setting.channelId);
         if (!autosaveChannel) {
             console.error(`Channel not found: ${setting.channelId}`);
-            return;
+            continue;  // Use continue instead of return
         }
 
-        // Retrieve the settings for the user who initiated the auto command
         const initiatorSettings = await UserSetting.findOne({ userId: setting.userId });
-        const embedColor = initiatorSettings && initiatorSettings.embedColor ? initiatorSettings.embedColor : 'Green'; // Default to white if not set
+        const embedColor = initiatorSettings?.embedColor ?? 'Green';
 
         const embed = new EmbedBuilder()
-            .setColor(embedColor) // Set the embed color based on the initiator's settings
+            .setColor(embedColor)
             .setTimestamp(message.createdTimestamp)
             .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() });
 
-        // Set the description and image if available
         if (message.content) {
             embed.setDescription(message.content);
         }
+
         if (message.attachments.size > 0) {
             const imageAttachment = message.attachments.find(att => att.contentType && att.contentType.startsWith('image/'));
             if (imageAttachment) {
@@ -33,7 +41,13 @@ async function handleAutoSave(message, setting, client) {
             }
         }
 
-        await autosaveChannel.send({ embeds: [embed] });
+        // The sentMessage is inside the loop, so its scope is correct here
+        const sentMessage = await autosaveChannel.send({ embeds: [embed] });
+        messageMap.set(message.id, sentMessage.id);
+
+        setTimeout(() => {
+            messageMap.delete(message.id);
+        }, 60000);
     }
 }
 
@@ -64,27 +78,36 @@ module.exports = {
         }
 
         // Save or update the autosave settings for this user and channel in the database
-        const setting = await AutoSaveSetting.findOneAndUpdate(
-            {
-                userId: interaction.user.id,
-                guildId: interaction.guildId // Adding guildId ensures uniqueness per guild
-            },
-            {
-                channelId: targetChannel.id,
-                autoSaveActive: true,
-                targetUserId: targetUser ? targetUser.id : null
-            },
-            {
-                new: true,
-                upsert: true // This creates a new document if one doesn't exist
-            }
-        );
+        const filter = {
+            userId: interaction.user.id,
+            guildId: interaction.guildId,
+            targetUserId: targetUser.id // Use the targetUserId in the filter to allow overwriting
+        };
 
-        const key = `${interaction.guildId}-${setting.targetUserId}`;
-        interaction.client.autoSaveSettings.set(key, setting);
+        const update = {
+            channelId: targetChannel.id,
+            autoSaveActive: true
+        };
 
+        const options = {
+            new: true,
+            upsert: true
+        };
 
-        await interaction.reply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.`, ephemeral: true });
+        try {
+            const setting = await AutoSaveSetting.findOneAndUpdate(filter, update, options);
+
+            // Update the client's in-memory map
+            const key = `${interaction.guildId}-${setting.targetUserId}`;
+            interaction.client.autoSaveSettings.set(key, setting);
+
+            await interaction.reply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.`, ephemeral: true });
+        } catch (error) {
+            console.error('Failed to save the autosave setting:', error);
+            await interaction.reply({ content: 'There was an error while setting up autosave.', ephemeral: true });
+        }
     },
+
     handleAutoSave,
+    messageMap,
 };

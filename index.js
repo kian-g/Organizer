@@ -18,6 +18,8 @@ const client = new Client({
     ]
 });
 
+const { messageMap } = require('./commands/auto.js');
+
 client.commands = new Collection();
 client.autoSaveSettings = new Map();
 
@@ -71,14 +73,8 @@ const autoCommand = require('./commands/auto.js'); // Import the auto.js module
 
 client.on('messageCreate', async message => {
     try {
-        // Construct the key for the autoSaveSettings map using the author's ID
-        const key = `${message.guildId}-${message.author.id}`;
-        const setting = client.autoSaveSettings.get(key);
-
-        // If a setting is found and the message is from the tracked user, handle autosave
-        if (setting) {
-            await autoCommand.handleAutoSave(message, setting, client);
-        }
+        // No need to construct the key, just call the function
+        await autoCommand.handleAutoSave(message, client);
     } catch (error) {
         console.error('Error in messageCreate event:', error.stack || error);
     }
@@ -96,6 +92,23 @@ client.on('interactionCreate', async interaction => {
     } catch (error) {
         console.error(error);
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    }
+});
+
+client.on('messageDelete', async message => {
+    try {
+        // Check if the deleted message is in the map
+        const autosaveMessageId = messageMap.get(message.id);
+        if (autosaveMessageId) {
+            const autosaveChannel = message.channel; // Assuming the autosave is in the same channel
+            const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId);
+            if (autosaveMessage) {
+                await autosaveMessage.delete();
+                messageMap.delete(message.id); // Remove the entry from the map
+            }
+        }
+    } catch (error) {
+        console.error('Error in messageDelete event:', error);
     }
 });
 
