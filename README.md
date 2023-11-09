@@ -11,6 +11,8 @@ The Discord Autosave Bot is a sophisticated tool designed for Discord server adm
 - Controlled Tracking: Empowers users to stop tracking messages with a simple /stop command.
 - Visibility of Tracking: Users can view a list of all currently tracked users with the /tracking command.
 
+<img style="float: right;" src="https://media.discordapp.net/attachments/1171633129270812674/1172045751153606676/YumYum_brain_3ac4f244-5176-487e-83c6-de5536ea4e7d.png?ex=655ee3aa&is=654c6eaa&hm=36f4833b59a868bbab0c8228332081a2bd89863c85e0adea748743e78aacfb78&=&width=935&height=935" />
+
 ## Commands
 - `/auto [channel] [user]`: Initiates autosaving of messages for a specific user.
 - `/help`: Displays detailed information about how to use the bot's commands.
