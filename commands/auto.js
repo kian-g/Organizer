@@ -1,13 +1,11 @@
-// auto.js
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 const UserSetting = require('../models/UserSetting');
 
 const messageMap = new Map();
 
-// Function to handle the creation and sending of the auto-save embed message
 async function handleAutoSave(message, client) {
-    if (message.author.bot || (!message.content && message.attachments.size === 0)) return;
+    if (!message.content && message.attachments.size === 0) return;
 
     const settings = await AutoSaveSetting.find({
         guildId: message.guildId,
@@ -15,11 +13,11 @@ async function handleAutoSave(message, client) {
         autoSaveActive: true
     });
 
-    for (const setting of settings) {  // Change forEach to a for...of loop
+    for (const setting of settings) {
         const autosaveChannel = client.channels.cache.get(setting.channelId);
         if (!autosaveChannel) {
             console.error(`Channel not found: ${setting.channelId}`);
-            continue;  // Use continue instead of return
+            continue;
         }
 
         const initiatorSettings = await UserSetting.findOne({ userId: setting.userId });
@@ -41,13 +39,12 @@ async function handleAutoSave(message, client) {
             }
         }
 
-        // The sentMessage is inside the loop, so its scope is correct here
         const sentMessage = await autosaveChannel.send({ embeds: [embed] });
         messageMap.set(message.id, sentMessage.id);
 
         setTimeout(() => {
             messageMap.delete(message.id);
-        }, 60000);
+        }, 60000); // Adjusted to the desired 45 seconds
     }
 }
 
@@ -60,33 +57,45 @@ module.exports = {
             .setRequired(true))
         .addUserOption(option => option.setName('user')
             .setDescription('The user whose messages to automatically save')
+            .setRequired(false))
+        .addStringOption(option => option.setName('tag')
+            .setDescription('A tag to label this autosave setting')
             .setRequired(false)),
 
     async execute(interaction) {
+        const tag = interaction.options.getString('tag');
         const targetChannel = interaction.options.getChannel('channel');
         let targetUser = interaction.options.getUser('user');
 
-        // If no user is provided, default to the provided user ID
+        // Default user ID if no user is provided
+        const defaultUserId = '936929561302675456';
+
         if (!targetUser) {
             try {
-                targetUser = await interaction.client.users.fetch('936929561302675456');
+                targetUser = await interaction.client.users.fetch(defaultUserId);
             } catch (error) {
                 console.error('Error fetching the default user:', error);
-                await interaction.reply({ content: 'Failed to set the default user for autosave.', ephemeral: true });
+                // Make sure to only reply if the interaction hasn't been replied to or deferred
+                if (!interaction.deferred && !interaction.replied) {
+                    await interaction.reply({ content: 'Failed to set the default user for autosave.', ephemeral: true });
+                } else if (interaction.deferred) {
+                    await interaction.editReply({ content: 'Failed to set the default user for autosave.' });
+                }
                 return;
             }
         }
 
-        // Save or update the autosave settings for this user and channel in the database
+        // Setup the filter, update, and options for the MongoDB operation
         const filter = {
             userId: interaction.user.id,
             guildId: interaction.guildId,
-            targetUserId: targetUser.id // Use the targetUserId in the filter to allow overwriting
+            targetUserId: targetUser.id
         };
 
         const update = {
             channelId: targetChannel.id,
-            autoSaveActive: true
+            autoSaveActive: true,
+            tag: tag || ''
         };
 
         const options = {
@@ -96,15 +105,25 @@ module.exports = {
 
         try {
             const setting = await AutoSaveSetting.findOneAndUpdate(filter, update, options);
-
-            // Update the client's in-memory map
             const key = `${interaction.guildId}-${setting.targetUserId}`;
             interaction.client.autoSaveSettings.set(key, setting);
 
-            await interaction.reply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.`, ephemeral: true });
+            // Reply with the success message
+            if (!interaction.deferred && !interaction.replied) {
+                await interaction.reply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.`, ephemeral: true });
+            } else if (interaction.deferred) {
+                await interaction.editReply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.` });
+            }
         } catch (error) {
             console.error('Failed to save the autosave setting:', error);
-            await interaction.reply({ content: 'There was an error while setting up autosave.', ephemeral: true });
+            // Follow up with the error message if the interaction has already been replied to or deferred
+            if (!interaction.deferred && !interaction.replied) {
+                await interaction.reply({ content: 'There was an error while setting up autosave.', ephemeral: true }).catch(console.error);
+            } else if (interaction.deferred) {
+                await interaction.editReply({ content: 'There was an error while setting up autosave.' }).catch(console.error);
+            } else {
+                await interaction.followUp({ content: 'There was an error while setting up autosave.', ephemeral: true }).catch(console.error);
+            }
         }
     },
 

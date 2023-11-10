@@ -17,10 +17,10 @@ module.exports = {
 
     async execute(interaction) {
         const targetChannel = interaction.options.getChannel('channel_to_save_to');
-        let messageToSave;
         const messageIdentifier = interaction.options.getString('message_identifier');
 
         try {
+            let messageToSave;
             // Check if messageIdentifier is a message link
             const messageLinkPattern = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/;
             const linkMatch = messageLinkPattern.exec(messageIdentifier);
@@ -37,7 +37,6 @@ module.exports = {
                 messageToSave = await interaction.channel.messages.fetch(messageIdentifier);
             }
 
-            // Ensure messageToSave is defined
             if (!messageToSave) {
                 await interaction.reply({ content: 'Unable to find the message. Please check the ID or link provided.', ephemeral: true });
                 return;
@@ -67,8 +66,12 @@ module.exports = {
             await targetChannel.send({ embeds: [embed] });
             await interaction.reply({ content: 'Message saved!', ephemeral: true });
         } catch (error) {
-            console.error('Error saving message:', error);
-            await interaction.reply({ content: 'There was an error trying to save the message.', ephemeral: true });
+            console.error('Error:', error);
+            // If the reply hasn't been sent yet, send the error message.
+            if (!interaction.replied) {
+                await interaction.reply({ content: 'There was an error while executing this command.', ephemeral: true }).catch(console.error);
+            }
         }
     },
+
 };

@@ -1,4 +1,3 @@
-// commands/stop.js
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 
@@ -11,44 +10,60 @@ module.exports = {
             .setRequired(false))
         .addStringOption(option => option.setName('all')
             .setDescription('Stops tracking all messages if set to "all"')
+            .setRequired(false))
+        .addStringOption(option => option.setName('tag')
+            .setDescription('The tag of the autosave setting to stop')
             .setRequired(false)),
 
     async execute(interaction) {
+        await interaction.deferReply({ ephemeral: true });
+
+        const tag = interaction.options.getString('tag');
         const user = interaction.options.getUser('user');
         const all = interaction.options.getString('all');
 
-        if (user) {
+        let content = '';
+
+        if (tag) {
+            // Stop the autosave setting with the provided tag
+            const result = await AutoSaveSetting.updateOne(
+                { userId: interaction.user.id, guildId: interaction.guildId, tag: tag },
+                { autoSaveActive: false }
+            );
+            content = result.matchedCount === 0
+                ? `No autosave setting found with tag "${tag}".`
+                : `Autosave setting with tag "${tag}" stopped.`;
+        } else if (user) {
             // Stop tracking messages from a specific user
             const result = await AutoSaveSetting.updateOne(
                 { userId: interaction.user.id, guildId: interaction.guildId, targetUserId: user.id },
                 { autoSaveActive: false }
             );
-
-            if (result.matchedCount === 0) {
-                await interaction.reply({ content: `No active autosave found for user <@${user.id}>.`, ephemeral: true });
-            } else {
-                await interaction.reply({ content: `Autosave stopped for user <@${user.id}>.`, ephemeral: true });
-            }
+            content = result.matchedCount === 0
+                ? `No active autosave found for user <@${user.id}>.`
+                : `Autosave stopped for user <@${user.id}>.`;
         } else if (all === 'all') {
             // Stop tracking messages from all users
             await AutoSaveSetting.updateMany(
                 { userId: interaction.user.id, guildId: interaction.guildId },
                 { autoSaveActive: false }
             );
-            await interaction.reply({ content: 'Autosave stopped for all users.', ephemeral: true });
+            content = 'Autosave stopped for all users.';
         } else {
-            await interaction.reply({ content: 'Please specify a user or "all" to stop autosaving.', ephemeral: true });
+            content = 'Please specify a user or "all" to stop autosaving.';
         }
 
-        // Update the in-memory settings
-        if (user || all === 'all') {
+        // Update the in-memory settings if necessary
+        if (user || all === 'all' || tag) {
             interaction.client.autoSaveSettings.forEach((value, key) => {
                 if (key.startsWith(interaction.guildId)) {
-                    if (all === 'all' || value.targetUserId === user.id) {
+                    if (all === 'all' || value.targetUserId === user?.id || value.tag === tag) {
                         interaction.client.autoSaveSettings.delete(key);
                     }
                 }
             });
         }
+
+        await interaction.editReply({ content });
     },
 };

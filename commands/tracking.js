@@ -1,4 +1,3 @@
-// commands/tracking.js
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 
@@ -20,12 +19,13 @@ module.exports = {
             return;
         }
 
-        // Construct a list of users being tracked
+        // Construct a list of users being tracked and their associated tags
         let replyText = 'You are currently tracking messages from the following users:\n';
         settings.forEach(setting => {
             // If targetUserId is null or undefined, it means all users are being tracked.
             const userDescription = setting.targetUserId ? `<@${setting.targetUserId}>` : 'All Users';
-            replyText += `${userDescription} in <#${setting.channelId}>\n`;
+            const tagDescription = setting.tag ? `(Tag: ${setting.tag})` : '(No tag specified)';
+            replyText += `${userDescription} in <#${setting.channelId}> ${tagDescription}\n`;
         });
 
         await interaction.reply({ content: replyText, ephemeral: true });

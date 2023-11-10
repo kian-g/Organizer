@@ -12,7 +12,7 @@ module.exports = {
         const { EmbedBuilder } = require('discord.js');
         const helpEmbed = new EmbedBuilder()
             .setTitle('Help: List of Commands')
-            .setColor('Gold') // Use a color of your choice
+            .setColor('Gold')
             .setDescription('Here are the commands you can use:');
 
         // Read the command files
