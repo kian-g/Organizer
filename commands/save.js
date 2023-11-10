@@ -8,11 +8,11 @@ module.exports = {
         .setName('save')
         .setDescription('Saves a message to a designated channel.')
         .addChannelOption(option =>
-            option.setName('channel_to_save_to')
+            option.setName('channel')
                 .setDescription('The channel to save the message to')
                 .setRequired(true))
         .addStringOption(option =>
-            option.setName('message_identifier')
+            option.setName('identifier')
                 .setDescription('The ID or link of the message to save')
                 .setRequired(true)),
 
