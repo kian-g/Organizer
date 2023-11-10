@@ -14,4 +14,4 @@ The Organizer Discord bot is designed to make saving messages easy. From saving 
 ### 📝Note that this bot was designed with the primary purpose of saving and organizing images created by the AI powered Midjourey bot.
 
 ## Contribution
-Contributions to the bot's development are welcome. 
+Contributions to the bot's development are welcome. Please use the `/suggest` feature.
