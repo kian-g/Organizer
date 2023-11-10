@@ -1,6 +1,6 @@
 require('./customLogger');
 
-//Delete and refresh commands
+// Delete and refresh commands
 
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');

@@ -1,4 +1,3 @@
-// consoleChalk.js
 (async () => {
     const chalk = (await import('chalk')).default;
 
