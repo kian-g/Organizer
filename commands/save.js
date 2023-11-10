@@ -2,7 +2,6 @@ require('../customLogger');
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
-const UserSetting = require('../models/UserSetting');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -45,15 +44,13 @@ module.exports = {
             }
 
             const messageUrl = `https://discord.com/channels/${interaction.guild.id}/${messageToSave.channel.id}/${messageToSave.id}`;
-            const userSettings = await UserSetting.findOne({ userId: interaction.user.id });
-            const embedColor = userSettings ? userSettings.embedColor : "Green";
 
             const embed = new EmbedBuilder()
                 .setTitle('Saved Message')
                 .setURL(messageUrl)
                 .setAuthor({ name: messageToSave.author.username, iconURL: messageToSave.author.displayAvatarURL() })
                 .setTimestamp(new Date(messageToSave.createdTimestamp))
-                .setColor(embedColor)
+                .setColor("Green")
                 .setFooter({ text: 'Message saved by ' + interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
 
             if (messageToSave.content) {

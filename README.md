@@ -8,7 +8,6 @@ The Organizer Discord bot is designed to make saving messages easy. From saving 
 - `/auto [channel] [user] [tag]`: Initiates autosaving of messages for a specific user.
 - `/help`: Displays detailed information about how to use the bot's commands.
 - `/save [channel_to_save_to] [message_identifier]`: Saves a specified message.
-- `/setcolor [color]`: Sets the user's preferred color for message embeds.
 - `/stop [user/tag]`: Discontinues message tracking for a specific user or all users. If you only use `/stop`, it stops ALL of your tracking.
 - `/delete [tag]`: Delete a tag from the database.
 - `/tracking`: Lists all users whose messages are being tracked by you.

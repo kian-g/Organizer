@@ -2,7 +2,6 @@ require('../customLogger');
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
-const UserSetting = require('../models/UserSetting');
 
 const messageMap = new Map();
 
@@ -22,11 +21,8 @@ async function handleAutoSave(message, client) {
             continue;
         }
 
-        const initiatorSettings = await UserSetting.findOne({ userId: setting.userId });
-        const embedColor = initiatorSettings?.embedColor ?? 'Green';
-
         const embed = new EmbedBuilder()
-            .setColor(embedColor)
+            .setColor("Green")
             .setTimestamp(message.createdTimestamp)
             .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() });
 

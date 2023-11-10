@@ -36,7 +36,7 @@ module.exports = {
             helpEmbed.addFields({
                 name: `/${command.data.name}`,
                 value: commandDescription,
-                inline: true // Set to false to ensure each command appears as its own block
+                inline: false // Set to false to ensure each command appears as its own block
             });
         }
 
