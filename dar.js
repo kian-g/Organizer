@@ -1,4 +1,4 @@
-require('../customLogger');
+require('./customLogger');
 
 //Delete and refresh commands
 
