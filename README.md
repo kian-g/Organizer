@@ -23,7 +23,7 @@ The Discord Autosave Bot is a sophisticated tool designed for Discord server adm
 
 ## Dependencies
 - [discord.js](https://discord.js.org/): A powerful library for interacting with the Discord API.
-- [mongoose](https://mongoosejs.com/): Elegant MongoDB object modeling for Node.js.
+- [mongoose](https://mongoosejs.com/): Elegant MongoDB object modeling for Node.JS.
 - [@discordjs/rest](https://www.npmjs.com/package/@discordjs/rest): REST manager for Discord's HTTP API.
 - [@discord-api-types](https://www.npmjs.com/package/discord-api-types): Types for Discord's HTTP API.
 
