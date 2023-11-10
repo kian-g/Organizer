@@ -1,3 +1,5 @@
+require('../customLogger');
+
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 

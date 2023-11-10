@@ -1,4 +1,5 @@
 require('./consoleChalk');
+require('./customLogger');
 
 // index.js
 const fs = require('fs');
@@ -97,8 +98,6 @@ client.on('interactionCreate', async interaction => {
 
 
 client.on('messageDelete', async message => {
-    if (!message.guild) return; // Ignore DMs
-
     // Check if the deleted message is in the map
     const autosaveMessageId = messageMap.get(message.id);
     if (!autosaveMessageId) {
@@ -106,33 +105,59 @@ client.on('messageDelete', async message => {
     }
 
     try {
-        const autosaveChannel = message.channel; // Assuming the autosave is in the same channel
-        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId).catch(() => null);
+        // Retrieve the autosave setting to get the correct channel ID
+        const setting = client.autoSaveSettings.get(`${message.guild.id}-${message.author.id}`);
+        if (!setting) {
+            messageMap.delete(message.id);
+            return; // No autosave setting found for this user in this guild
+        }
 
+        const autosaveChannelId = setting.channelId;
+        const autosaveChannel = await client.channels.fetch(autosaveChannelId).catch(() => null);
+        if (!autosaveChannel) {
+            console.error(`Autosave channel not found: ${autosaveChannelId}`);
+            messageMap.delete(message.id);
+            return; // Autosave channel not found or bot lacks permissions
+        }
+
+        // Delete the corresponding autosaved message
+        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId).catch(() => null);
         if (autosaveMessage) {
             await autosaveMessage.delete();
         }
 
-        messageMap.delete(message.id); // Remove the entry from the map regardless
+        messageMap.delete(message.id); // Remove the entry from the map
     } catch (error) {
         console.error('Error in messageDelete event:', error);
     }
 });
 
+
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-    if (newMessage.partial || !newMessage.guild || oldMessage.content === newMessage.content) {
+    if (newMessage.partial || !newMessage.guild) {
         return;
     }
 
     const autosaveMessageId = messageMap.get(newMessage.id);
     if (!autosaveMessageId) {
-        return; // No corresponding autosaved message
+        return;
     }
 
     try {
-        const autosaveChannel = await client.channels.cache.get(newMessage.channel.id);
-        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId).catch(() => null);
+        // Retrieve the autosave setting to get the correct channel ID
+        const setting = client.autoSaveSettings.get(`${newMessage.guild.id}-${newMessage.author.id}`);
+        if (!setting) {
+            return; // No autosave setting found for this user in this guild
+        }
 
+        const autosaveChannelId = setting.channelId;
+        const autosaveChannel = await client.channels.fetch(autosaveChannelId).catch(() => null);
+        if (!autosaveChannel) {
+            console.error(`Autosave channel not found: ${autosaveChannelId}`);
+            return; // Autosave channel not found or bot lacks permissions
+        }
+
+        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId).catch(() => null);
         if (!autosaveMessage) {
             messageMap.delete(newMessage.id);
             return; // Autosaved message not found
@@ -149,14 +174,10 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
             updatedEmbed.setImage(imageAttachment.proxyURL);
         }
 
-        // Update the autosaved message with the new embed
         await autosaveMessage.edit({ embeds: [updatedEmbed] });
     } catch (error) {
         console.error('Error in messageUpdate event:', error);
     }
 });
-
-
-
 
 client.login(config.token);

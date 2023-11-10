@@ -1,3 +1,5 @@
+require('../customLogger');
+
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
 const UserSetting = require('../models/UserSetting');

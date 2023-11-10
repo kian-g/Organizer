@@ -1,3 +1,5 @@
+require('../customLogger');
+
 //Delete and refresh commands
 
 const { REST } = require('@discordjs/rest');

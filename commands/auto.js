@@ -1,3 +1,5 @@
+require('../customLogger');
+
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 const UserSetting = require('../models/UserSetting');
@@ -110,9 +112,9 @@ module.exports = {
 
             // Reply with the success message
             if (!interaction.deferred && !interaction.replied) {
-                await interaction.reply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.`, ephemeral: true });
+                await interaction.reply({ content: `Autosave is now active for ${targetUser.username} in <#${targetChannel.id}>.`, ephemeral: true });
             } else if (interaction.deferred) {
-                await interaction.editReply({ content: `Autosave is now active for ${targetUser.username} in ${targetChannel.name}.` });
+                await interaction.editReply({ content: `Autosave is now active for ${targetUser.username} in <#${targetChannel.id}>.` });
             }
         } catch (error) {
             console.error('Failed to save the autosave setting:', error);
