@@ -4,5 +4,6 @@
     "guildID": "EASY_UPDATE_ID",
     "ownerID": "YOUR_ID",
     "mongoConnectionString": "MONGODB_CONNECTION_STRING",
-    "supportServerLink": ""
+    "supportServerLink": "",
+    "suggestionChannel": "ID"
 }
