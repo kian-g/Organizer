@@ -97,61 +97,66 @@ client.on('interactionCreate', async interaction => {
 
 
 client.on('messageDelete', async message => {
+    if (!message.guild) return; // Ignore DMs
+
+    // Check if the deleted message is in the map
+    const autosaveMessageId = messageMap.get(message.id);
+    if (!autosaveMessageId) {
+        return; // If the message isn't tracked, do nothing
+    }
+
     try {
-        // Check if the deleted message is in the map
-        const autosaveMessageId = messageMap.get(message.id);
-        if (autosaveMessageId) {
-            const autosaveChannel = message.channel; // Assuming the autosave is in the same channel
-            const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId);
-            if (autosaveMessage) {
-                await autosaveMessage.delete();
-                messageMap.delete(message.id); // Remove the entry from the map
-            }
+        const autosaveChannel = message.channel; // Assuming the autosave is in the same channel
+        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId).catch(() => null);
+
+        if (autosaveMessage) {
+            await autosaveMessage.delete();
         }
+
+        messageMap.delete(message.id); // Remove the entry from the map regardless
     } catch (error) {
         console.error('Error in messageDelete event:', error);
     }
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-    // Check if the message has an embed and if the content actually changed to prevent unnecessary updates
-    if (newMessage.partial || oldMessage.content === newMessage.content) {
+    if (newMessage.partial || !newMessage.guild || oldMessage.content === newMessage.content) {
         return;
     }
 
-    // Retrieve the autosaved message ID from the map using the original message ID
     const autosaveMessageId = messageMap.get(newMessage.id);
-
     if (!autosaveMessageId) {
-        return; // If there's no corresponding autosaved message, do nothing
+        return; // No corresponding autosaved message
     }
 
     try {
-        // Fetch the autosaved message from its channel
         const autosaveChannel = await client.channels.cache.get(newMessage.channel.id);
-        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId);
+        const autosaveMessage = await autosaveChannel.messages.fetch(autosaveMessageId).catch(() => null);
 
-        // Proceed to update the embed of the autosaved message
-        if (autosaveMessage) {
-            // Extract the existing embed from the autosaved message
-            const embed = new EmbedBuilder(autosaveMessage.embeds[0]);
-
-            // Update the description of the embed with the new message content
-            embed.setDescription(newMessage.content);
-
-            // If there's an image in the new message, update it in the embed
-            const imageAttachment = newMessage.attachments.find(att => att.contentType && att.contentType.startsWith('image/'));
-            if (imageAttachment) {
-                embed.setImage(imageAttachment.proxyURL); // Using proxyURL is recommended
-            }
-
-            // Edit the autosaved message with the new embed
-            await autosaveMessage.edit({ embeds: [embed] });
+        if (!autosaveMessage) {
+            messageMap.delete(newMessage.id);
+            return; // Autosaved message not found
         }
+
+        // Create a new embed with the updated content
+        const updatedEmbed = new EmbedBuilder()
+            .setDescription(newMessage.content)
+            .setTimestamp(newMessage.editedTimestamp || newMessage.createdTimestamp)
+            .setAuthor({ name: newMessage.author.tag, iconURL: newMessage.author.displayAvatarURL() });
+
+        const imageAttachment = newMessage.attachments.find(att => att.contentType && att.contentType.startsWith('image/'));
+        if (imageAttachment) {
+            updatedEmbed.setImage(imageAttachment.proxyURL);
+        }
+
+        // Update the autosaved message with the new embed
+        await autosaveMessage.edit({ embeds: [updatedEmbed] });
     } catch (error) {
         console.error('Error in messageUpdate event:', error);
     }
 });
+
+
 
 
 client.login(config.token);

@@ -44,7 +44,7 @@ async function handleAutoSave(message, client) {
 
         setTimeout(() => {
             messageMap.delete(message.id);
-        }, 60000); // Adjusted to the desired 45 seconds
+        }, 85000); // Adjusted to the desired 45 seconds
     }
 }
 
