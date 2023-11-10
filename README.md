@@ -12,6 +12,7 @@ The Organizer Discord bot is designed to make saving messages easy. From saving 
 - `/delete [tag]`: Delete a tag from the database.
 - `/tracking`: Lists all users whose messages are being tracked by you.
 - `/suggest [suggestion]`: Sends feedback to the bot developer.
+- `/support`: Join the support server!
 
 ## 📝Note
 This bot was designed with the primary purpose of saving and organizing images created by the AI powered Midjourey bot.

@@ -3,5 +3,6 @@
     "clientID": "BOT_CLIENT_ID",
     "guildID": "EASY_UPDATE_ID",
     "ownerID": "YOUR_ID",
-    "mongoConnectionString": "MONGODB_CONNECTION_STRING"
+    "mongoConnectionString": "MONGODB_CONNECTION_STRING",
+    "supportServerLink": ""
 }
