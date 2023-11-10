@@ -1,6 +1,7 @@
 {
-    "token": "BOT TOKEN",
-    "clientID": "BOT USER ID",
-    "guildID": "TO EASY UPDATE COMMANDS TO THIS ONE PLACE",
-    "ownerID": "BOT OWNER ID"
+    "token": "BOT_TOKEN",
+    "clientID": "BOT_CLIENT_ID",
+    "guildID": "EASY_UPDATE_ID",
+    "ownerID": "YOUR_ID",
+    "mongoConnectionString": "MONGODB_CONNECTION_STRING"
 }
