@@ -4,7 +4,7 @@ require('./CustomFeatures/customLogger');
 
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { clientID, guildID, token } = require('./config.json'); // Ensure you have these in your config
+const { clientID, guildID, token } = require('./Config/config.json'); // Ensure you have these in your config
 
 const rest = new REST({ version: '9' }).setToken(token);
 

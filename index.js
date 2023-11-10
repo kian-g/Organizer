@@ -8,7 +8,7 @@ const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const mongoose = require('mongoose');
 const AutoSaveSetting = require('./models/AutoSaveSetting'); // Make sure this path is correct
-const config = require("./config.json");
+const config = require("./Config/config.json");
 
 const client = new Client({
     intents: [
