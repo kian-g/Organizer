@@ -15,11 +15,26 @@ if (!fs.existsSync(logDirectory)) {
 // Create a write stream for logging
 const logFileStream = fs.createWriteStream(path.join(logDirectory, 'bot-log.txt'), { flags: 'a' });
 
+// Function to format timestamp
+function formatTimestamp() {
+    const now = new Date();
+    const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const dayOfWeek = days[now.getDay()];
+    const month = now.getMonth() + 1; // JavaScript months are 0-based
+    const day = now.getDate();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedTime = `${hours % 12 || 12}:${minutes < 10 ? '0' : ''}${minutes}${ampm}`;
+
+    return `[${dayOfWeek} (${month}/${day}) ${formattedTime}]`;
+}
+
 // Custom log function
 function customLog(level, ...args) {
-    const timestamp = new Date().toISOString();
+    const timestamp = formatTimestamp();
     const message = util.format(...args);
-    const formattedMessage = `[${timestamp}] [${level}] ${message}`;
+    const formattedMessage = `${timestamp} [${level}] ${message}`;
 
     // Use original console method
     const originalMethod = level === 'ERROR' ? originalConsoleError : originalConsoleLog;
