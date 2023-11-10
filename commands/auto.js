@@ -1,4 +1,4 @@
-require('../customLogger');
+require('../CustomFeatures/customLogger');
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const AutoSaveSetting = require('../models/AutoSaveSetting');

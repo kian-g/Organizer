@@ -1,4 +1,4 @@
-require('./customLogger');
+require('./CustomFeatures/customLogger');
 
 //Delete and refresh commands
 

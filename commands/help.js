@@ -1,4 +1,4 @@
-require('../customLogger');
+require('../CustomFeatures/customLogger');
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');

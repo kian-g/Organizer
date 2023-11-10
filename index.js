@@ -1,5 +1,5 @@
-require('./consoleChalk');
-require('./customLogger');
+require('./CustomFeatures/consoleChalk.js');
+require('./CustomFeatures/customLogger.js');
 
 // index.js
 const fs = require('fs');
