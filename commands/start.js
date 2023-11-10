@@ -1,6 +1,3 @@
-require('../customLogger');
-
-// commands/start.js
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 
@@ -17,13 +14,22 @@ module.exports = {
         const tag = interaction.options.getString('tag');
 
         try {
-            // Reactivate the autosave setting with the provided tag
-            // Modify the query to match the tag within the tags array
+            // First, deactivate any existing active tracking for the user
+            await AutoSaveSetting.updateMany(
+                {
+                    userId: interaction.user.id,
+                    guildId: interaction.guildId,
+                    targetUserId: { $ne: null } // Target any user that is being tracked
+                },
+                { autoSaveActive: false }
+            );
+
+            // Then, activate the autosave setting with the provided tag
             const result = await AutoSaveSetting.updateOne(
                 {
                     userId: interaction.user.id,
                     guildId: interaction.guildId,
-                    tags: tag // Searching within the array
+                    tags: tag
                 },
                 { autoSaveActive: true }
             );
