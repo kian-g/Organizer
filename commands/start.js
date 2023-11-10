@@ -14,18 +14,25 @@ module.exports = {
         const tag = interaction.options.getString('tag');
 
         try {
-            // First, deactivate any existing active tracking for the user
+            // Find the currently active tag(s) to inform the user about deactivation
+            const activeSettings = await AutoSaveSetting.find({
+                userId: interaction.user.id,
+                guildId: interaction.guildId,
+                autoSaveActive: true
+            });
+
+            // Deactivate any existing active tracking for the user
             await AutoSaveSetting.updateMany(
                 {
                     userId: interaction.user.id,
                     guildId: interaction.guildId,
-                    targetUserId: { $ne: null } // Target any user that is being tracked
+                    autoSaveActive: true
                 },
                 { autoSaveActive: false }
             );
 
-            // Then, activate the autosave setting with the provided tag
-            const result = await AutoSaveSetting.updateOne(
+            // Activate the autosave setting with the provided tag
+            const activationResult = await AutoSaveSetting.updateOne(
                 {
                     userId: interaction.user.id,
                     guildId: interaction.guildId,
@@ -34,9 +41,18 @@ module.exports = {
                 { autoSaveActive: true }
             );
 
-            let content = result.matchedCount === 0
-                ? `No autosave setting found with tag "${tag}".`
-                : `Autosave setting with tag "${tag}" reactivated.`;
+            let content = '';
+            if (activationResult.matchedCount === 0) {
+                content = `No autosave setting found with tag "${tag}".`;
+            } else {
+                content = `Autosave setting with tag "${tag}" reactivated.`;
+                // Inform the user about the deactivation of other tags
+                const deactivatedTags = activeSettings.filter(setting => !setting.tags.includes(tag))
+                    .map(setting => setting.tags.join(', ')).join(', ');
+                if (deactivatedTags) {
+                    content += ` The following tag(s) were deactivated: "${deactivatedTags}."`;
+                }
+            }
 
             await interaction.editReply({ content });
         } catch (error) {
