@@ -28,8 +28,12 @@ module.exports = {
 
         if (tag) {
             // Stop the autosave setting with the provided tag
-            const result = await AutoSaveSetting.updateOne(
-                { userId: interaction.user.id, guildId: interaction.guildId, tag: tag },
+            const result = await AutoSaveSetting.updateMany(
+                {
+                    userId: interaction.user.id,
+                    guildId: interaction.guildId,
+                    tags: tag // Searching within the array
+                },
                 { autoSaveActive: false }
             );
             content = result.matchedCount === 0
@@ -37,8 +41,12 @@ module.exports = {
                 : `Autosave setting with tag "${tag}" stopped.`;
         } else if (user) {
             // Stop tracking messages from a specific user
-            const result = await AutoSaveSetting.updateOne(
-                { userId: interaction.user.id, guildId: interaction.guildId, targetUserId: user.id },
+            const result = await AutoSaveSetting.updateMany(
+                {
+                    userId: interaction.user.id,
+                    guildId: interaction.guildId,
+                    targetUserId: user.id
+                },
                 { autoSaveActive: false }
             );
             content = result.matchedCount === 0
@@ -55,16 +63,6 @@ module.exports = {
             content = 'Please specify a user or "all" to stop autosaving.';
         }
 
-        // Update the in-memory settings if necessary
-        if (user || all === 'all' || tag) {
-            interaction.client.autoSaveSettings.forEach((value, key) => {
-                if (key.startsWith(interaction.guildId)) {
-                    if (all === 'all' || value.targetUserId === user?.id || value.tag === tag) {
-                        interaction.client.autoSaveSettings.delete(key);
-                    }
-                }
-            });
-        }
 
         await interaction.editReply({ content });
     },

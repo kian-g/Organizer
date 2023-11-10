@@ -6,12 +6,9 @@ const autoSaveSettingSchema = new mongoose.Schema({
     autoSaveActive: Boolean, // If the autosave is currently active
     targetUserId: String, // The ID of the user whose messages to autosave
     guildId: String, // The ID of the guild where the command was used.
-    tag: {
-        type: String,
-        default: ''
-    },
+    tags: [{ type: String }]
 });
 
-autoSaveSettingSchema.index({ userId: 1, guildId: 1, targetUserId: 1, channelId: 1 }, { unique: true });
+autoSaveSettingSchema.index({ userId: 1, guildId: 1, targetUserId: 1, channelId: 1, tags: 1 }, { unique: true });
 
 module.exports = mongoose.model('AutoSaveSetting', autoSaveSettingSchema);

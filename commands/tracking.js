@@ -8,12 +8,12 @@ module.exports = {
         .setName('tracking')
         .setDescription('Lists all users that you are currently tracking.'),
 
+    // In your 'tracking' command execute function
     async execute(interaction) {
-        // Fetch all autosave settings for this user in the current guild that are active.
+        // Fetch all autosave settings for this user in the current guild, regardless of active status.
         const settings = await AutoSaveSetting.find({
             userId: interaction.user.id,
             guildId: interaction.guildId,
-            autoSaveActive: true
         });
 
         if (settings.length === 0) {
@@ -21,15 +21,16 @@ module.exports = {
             return;
         }
 
-        // Construct a list of users being tracked and their associated tags
+        // Construct a list of users being tracked, their associated tags, and status (ENABLED/DISABLED)
         let replyText = 'You are currently tracking messages from the following users:\n';
         settings.forEach(setting => {
-            // If targetUserId is null or undefined, it means all users are being tracked.
             const userDescription = setting.targetUserId ? `<@${setting.targetUserId}>` : 'All Users';
-            const tagDescription = setting.tag ? `(Tag: ${setting.tag})` : '(No tag specified)';
-            replyText += `${userDescription} in <#${setting.channelId}> ${tagDescription}\n`;
+            const tagDescription = setting.tags.length > 0 ? `(Tag: ${setting.tags[0]})` : '(No tag specified)';
+            const status = setting.autoSaveActive ? 'ENABLED' : 'DISABLED';
+            replyText += `${userDescription} in <#${setting.channelId}> ${tagDescription} - ${status}\n`;
         });
 
         await interaction.reply({ content: replyText, ephemeral: true });
-    },
+    }
+
 };

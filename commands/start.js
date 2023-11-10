@@ -18,8 +18,13 @@ module.exports = {
 
         try {
             // Reactivate the autosave setting with the provided tag
+            // Modify the query to match the tag within the tags array
             const result = await AutoSaveSetting.updateOne(
-                { userId: interaction.user.id, guildId: interaction.guildId, tag: tag },
+                {
+                    userId: interaction.user.id,
+                    guildId: interaction.guildId,
+                    tags: tag // Searching within the array
+                },
                 { autoSaveActive: true }
             );
 

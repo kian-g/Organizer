@@ -87,17 +87,28 @@ module.exports = {
             }
         }
 
-        // Setup the filter, update, and options for the MongoDB operation
+        // First, deactivate any existing tags for the specific tracked user
+        await AutoSaveSetting.updateMany(
+            {
+                userId: interaction.user.id,
+                guildId: interaction.guildId,
+                targetUserId: targetUser.id
+            },
+            { autoSaveActive: false }
+        );
+
+        // Then, create or update the new tag for the tracked user
         const filter = {
             userId: interaction.user.id,
             guildId: interaction.guildId,
-            targetUserId: targetUser.id
+            targetUserId: targetUser.id,
+            tags: [tag]
         };
 
         const update = {
             channelId: targetChannel.id,
             autoSaveActive: true,
-            tag: tag || ''
+            tags: [tag]
         };
 
         const options = {
