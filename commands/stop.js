@@ -1,5 +1,3 @@
-require('../customLogger');
-
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AutoSaveSetting = require('../models/AutoSaveSetting');
 
@@ -10,9 +8,6 @@ module.exports = {
         .addUserOption(option => option.setName('user')
             .setDescription('The user whose messages to stop autosaving')
             .setRequired(false))
-        .addStringOption(option => option.setName('all')
-            .setDescription('Stops tracking all messages if set to "all"')
-            .setRequired(false))
         .addStringOption(option => option.setName('tag')
             .setDescription('The tag of the autosave setting to stop')
             .setRequired(false)),
@@ -22,7 +17,9 @@ module.exports = {
 
         const tag = interaction.options.getString('tag');
         const user = interaction.options.getUser('user');
-        const all = interaction.options.getString('all');
+
+        // Automatically consider "all" if neither tag nor user is provided
+        const all = tag || user ? false : 'all';
 
         let content = '';
 
@@ -36,7 +33,7 @@ module.exports = {
                 },
                 { autoSaveActive: false }
             );
-            content = result.matchedCount === 0
+            content = result.modifiedCount === 0
                 ? `No autosave setting found with tag "${tag}".`
                 : `Autosave setting with tag "${tag}" stopped.`;
         } else if (user) {
@@ -49,7 +46,7 @@ module.exports = {
                 },
                 { autoSaveActive: false }
             );
-            content = result.matchedCount === 0
+            content = result.modifiedCount === 0
                 ? `No active autosave found for user <@${user.id}>.`
                 : `Autosave stopped for user <@${user.id}>.`;
         } else if (all === 'all') {
@@ -60,9 +57,8 @@ module.exports = {
             );
             content = 'Autosave stopped for all users.';
         } else {
-            content = 'Please specify a user or "all" to stop autosaving.';
+            content = 'Please provide a user or a tag to stop autosaving, or use the command without options to stop all.';
         }
-
 
         await interaction.editReply({ content });
     },
