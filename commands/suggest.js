@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const config = require("../Config/config.json");
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const config = require("../Config/config.json")
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -22,8 +22,16 @@ module.exports = {
                 return;
             }
 
-            // Send the suggestion to the suggestion channel
-            await suggestionChannel.send({ content: `New suggestion from ${interaction.user.tag}: ${suggestion}` });
+            // Create an embed for the suggestion
+            const suggestionEmbed = new EmbedBuilder()
+                .setTitle('New Suggestion')
+                .setDescription(suggestion)
+                .setColor('Random') // You can set a specific color if you prefer
+                .setFooter({ text: `Suggested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })
+                .setTimestamp();
+
+            // Send the suggestion as an embed to the suggestion channel
+            await suggestionChannel.send({ embeds: [suggestionEmbed] });
 
             // Confirm the submission to the user
             await interaction.reply({ content: 'Your suggestion has been submitted successfully!', ephemeral: true });
