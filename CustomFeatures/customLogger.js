@@ -7,13 +7,13 @@ const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 
 // Log directory path
-const logDirectory = path.join(__dirname, 'logs');
+const logDirectory = path.join(__dirname, '../logs');
 if (!fs.existsSync(logDirectory)) {
     fs.mkdirSync(logDirectory);
 }
 
 // Create a write stream for logging
-const logFileStream = fs.createWriteStream(path.join(logDirectory, 'bot-log.txt'), { flags: 'a' });
+const logFileStream = fs.createWriteStream(path.join(logDirectory, '../logs/bot-log.txt'), { flags: 'a' });
 
 // Function to format timestamp
 function formatTimestamp() {

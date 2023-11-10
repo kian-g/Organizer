@@ -6,7 +6,7 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('save')
-        .setDescription('Saves a message to a designated channel.')
+        .setDescription('Manually saves a message to a designated channel.')
         .addChannelOption(option =>
             option.setName('channel')
                 .setDescription('The channel to save the message to')
