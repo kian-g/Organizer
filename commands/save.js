@@ -17,8 +17,9 @@ module.exports = {
                 .setRequired(true)),
 
     async execute(interaction) {
-        const targetChannel = interaction.options.getChannel('channel_to_save_to');
-        const messageIdentifier = interaction.options.getString('message_identifier');
+        // Corrected option names to match those defined in the SlashCommandBuilder
+        const targetChannel = interaction.options.getChannel('channel'); // Corrected from 'channel_to_save_to'
+        const messageIdentifier = interaction.options.getString('identifier'); // Corrected from 'message_identifier'
 
         try {
             let messageToSave;
@@ -34,7 +35,7 @@ module.exports = {
                 }
                 messageToSave = await interaction.client.channels.cache.get(channelId)?.messages.fetch(messageId);
             } else {
-                // If not a link, assume it is a message ID
+                // If not a link, attempt to fetch directly from the current channel
                 messageToSave = await interaction.channel.messages.fetch(messageIdentifier);
             }
 
@@ -45,13 +46,16 @@ module.exports = {
 
             const messageUrl = `https://discord.com/channels/${interaction.guild.id}/${messageToSave.channel.id}/${messageToSave.id}`;
 
+            const member = await interaction.guild.members.fetch(messageToSave.author.id).catch(console.error);
+            const authorName = member?.nickname ? member.nickname : messageToSave.author.username;
+
             const embed = new EmbedBuilder()
                 .setTitle('Saved Message')
                 .setURL(messageUrl)
-                .setAuthor({ name: messageToSave.author.username, iconURL: messageToSave.author.displayAvatarURL() })
+                .setAuthor({ name: authorName, iconURL: messageToSave.author.displayAvatarURL() })
                 .setTimestamp(new Date(messageToSave.createdTimestamp))
                 .setColor("Green")
-                .setFooter({ text: 'Message saved by ' + interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
+                .setFooter({ text: 'Message saved by ' + authorName, iconURL: interaction.user.displayAvatarURL() });
 
             if (messageToSave.content) {
                 embed.setDescription(messageToSave.content);
@@ -66,11 +70,11 @@ module.exports = {
             await interaction.reply({ content: 'Message saved!', ephemeral: true });
         } catch (error) {
             console.error('Error:', error);
-            // If the reply hasn't been sent yet, send the error message.
             if (!interaction.replied) {
                 await interaction.reply({ content: 'There was an error while executing this command.', ephemeral: true }).catch(console.error);
             }
         }
-    },
+    }
+
 
 };
